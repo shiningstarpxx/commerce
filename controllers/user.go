@@ -1,65 +1,55 @@
-// controllers/user.go
-
 package controllers
 
 import (
-	"fmt"
-	"log"
+	"encoding/json"
+	"net/http"
 
-	"commerce/models"
-	"gorm.io/gorm"
+	"commerce/datalayer"
 )
 
 type UserController struct {
-	DB *gorm.DB
+	Datalayer *datalayer.UserDatalayer
 }
 
-func (u *UserController) CreateUser(username, password, email string) (*models.User, error) {
-	newUser := &models.User{
-		Username: username,
-		Password: password,
-		Email:    email,
-	}
-
-	result := u.DB.Create(newUser)
-	if result.Error != nil {
-		log.Printf("Failed to create user: %s\n", result.Error)
-		return nil, result.Error
-	}
-
-	return newUser, nil
+// HttpRequestCreateUser is the data that should be provided in a request to create a new user.
+type HttpRequestCreateUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
-func (u *UserController) GetUserByUsername(username string) (*models.User, error) {
-	var user models.User
-	result := u.DB.Where("username = ?", username).First(&user)
-	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("user not found")
-		}
-		log.Printf("Error querying user: %s\n", result.Error)
-		return nil, result.Error
+func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(`{"error": "Method not allowed"}`))
+		return
 	}
 
-	return &user, nil
+	var requestData HttpRequestCreateUser
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "Invalid request data"}`))
+		return
+	}
+
+	user, err := u.Datalayer.CreateUser(requestData.Username, requestData.Password, requestData.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "Failed to create user"}`))
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
 }
 
-func (u *UserController) UpdateUser(user *models.User, updateData map[string]interface{}) error {
-	result := u.DB.Model(user).Updates(updateData)
-	if result.Error != nil {
-		log.Printf("Error updating user: %s\n", result.Error)
-		return result.Error
-	}
-
-	return nil
+func (u *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
-func (u *UserController) DeleteUser(user *models.User) error {
-	result := u.DB.Delete(user)
-	if result.Error != nil {
-		log.Printf("Error deleting user: %s\n", result.Error)
-		return result.Error
-	}
+func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
+}
 
-	return nil
+func (u *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
