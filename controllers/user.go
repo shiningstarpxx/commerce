@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YOUR_PROJECT_NAME/models"
+	"commerce/models"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +14,7 @@ type UserController struct {
 	DB *gorm.DB
 }
 
-func (u *Usercontroller) CreateUser(username, password, email string) (*models.User, error) {
+func (u *UserController) CreateUser(username, password, email string) (*models.User, error) {
 	newUser := &models.User{
 		Username: username,
 		Password: password,
@@ -30,7 +30,7 @@ func (u *Usercontroller) CreateUser(username, password, email string) (*models.U
 	return newUser, nil
 }
 
-func (u *Usercontroller) GetUserByUsername(username string) (*models.User, error) {
+func (u *UserController) GetUserByUsername(username string) (*models.User, error) {
 	var user models.User
 	result := u.DB.Where("username = ?", username).First(&user)
 	if result.Error != nil {
@@ -44,7 +44,7 @@ func (u *Usercontroller) GetUserByUsername(username string) (*models.User, error
 	return &user, nil
 }
 
-func (u *Usercontroller) UpdateUser(user *models.User, updateData map[string]interface{}) error {
+func (u *UserController) UpdateUser(user *models.User, updateData map[string]interface{}) error {
 	result := u.DB.Model(user).Updates(updateData)
 	if result.Error != nil {
 		log.Printf("Error updating user: %s\n", result.Error)
@@ -54,7 +54,7 @@ func (u *Usercontroller) UpdateUser(user *models.User, updateData map[string]int
 	return nil
 }
 
-func (u *Usercontroller) DeleteUser(user *models.User) error {
+func (u *UserController) DeleteUser(user *models.User) error {
 	result := u.DB.Delete(user)
 	if result.Error != nil {
 		log.Printf("Error deleting user: %s\n", result.Error)
