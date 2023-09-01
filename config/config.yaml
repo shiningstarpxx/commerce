@@ -1,6 +1,6 @@
 database:
   user: root
-  password:
+  password: STar1122
   host: localhost
   port: 3306
   name: commerce_db

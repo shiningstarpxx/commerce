@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"gopkg.in/yaml.v3"
 )
@@ -19,7 +21,11 @@ type Config struct {
 func LoadConfig(configFile string) (*Config, error) {
 	config := &Config{}
 
-	file, err := os.ReadFile(configFile)
+	// Find the full path to the config file
+	_, currentFilePath, _, _ := runtime.Caller(0)
+	configFilePath := filepath.Join(filepath.Dir(currentFilePath), configFile)
+
+	file, err := os.ReadFile(configFilePath)
 	if err != nil {
 		return nil, err
 	}
