@@ -76,3 +76,17 @@ func (u *UserDatalayer) DeleteUser(user *models.User) error {
 
 	return nil
 }
+
+func (u *UserDatalayer) UpdateUserEmailByID(id uint, newEmail string) error {
+	result := u.DB.Model(&models.User{}).Where("id = ?", id).Update("email", newEmail)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("no rows updated")
+	}
+
+	return nil
+}
