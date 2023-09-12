@@ -1,13 +1,25 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"commerce/controllers"
 	"commerce/database"
 	"commerce/datalayer"
 	"commerce/router"
-	"log"
-	"net/http"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+func initPrometheus() {
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		err := http.ListenAndServe(":8081", nil)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+}
 
 func main() {
 	// Initialize the database connection
@@ -19,6 +31,9 @@ func main() {
 	// Pass the database connection to the controller
 	daatalayer := &datalayer.UserDatalayer{DB: db}
 	userController := controllers.UserController{Datalayer: daatalayer}
+
+	// Setup Metrics Server
+	initPrometheus()
 
 	// Setup the router and routes
 	router := router.SetupRoutes(userController)
