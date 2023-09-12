@@ -1,4 +1,4 @@
-// controllers/user.go
+// controllers/user_controller.go
 
 package datalayer
 
@@ -12,6 +12,15 @@ import (
 
 type UserDatalayer struct {
 	DB *gorm.DB
+}
+
+type UserDatalayerInterface interface {
+	CreateUser(username, password, email string) (*models.User, error)
+	GetUser(id int) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
+	UpdateUser(user *models.User, updateData map[string]interface{}) error
+	DeleteUser(user *models.User) error
+	UpdateUserEmailByID(id uint, newEmail string) error
 }
 
 func (u *UserDatalayer) CreateUser(username, password, email string) (*models.User, error) {

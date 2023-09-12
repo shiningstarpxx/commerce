@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"commerce/datalayer"
+	"commerce/metrics"
 )
 
 type UserController struct {
-	Datalayer *datalayer.UserDatalayer
+	Datalayer datalayer.UserDatalayerInterface
 }
 
 // HttpRequestCreateUser is the data that should be provided in a request to create a new user.
@@ -46,6 +47,8 @@ func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
+	status := http.StatusOK
+	metrics.GetUserCount.WithLabelValues(string(status)).Inc()
 }
 
 func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
