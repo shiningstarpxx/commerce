@@ -21,6 +21,8 @@ type UserDatalayerInterface interface {
 	UpdateUser(user *models.User, updateData map[string]interface{}) error
 	DeleteUser(user *models.User) error
 	UpdateUserEmailByID(id uint, newEmail string) error
+	UpdateUserEmailByIDWithTransaction(id uint, newEmail string) error
+	UpdateUserEmailByIDWithCAS(id uint, newEmail string) error
 }
 
 func (u *UserDatalayer) CreateUser(username, password, email string) (*models.User, error) {
@@ -97,5 +99,52 @@ func (u *UserDatalayer) UpdateUserEmailByID(id uint, newEmail string) error {
 		return fmt.Errorf("no rows updated")
 	}
 
+	return nil
+}
+
+func (u *UserDatalayer) UpdateUserEmailByIDWithTransaction(id uint, newEmail string) error {
+	var user models.User
+
+	// 开启事务
+	tx := u.DB.Begin()
+
+	// 查询用户 for update
+	err := tx.Set("gorm:query_option", "FOR UPDATE").First(&user, id).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 更新用户
+	user.Email = newEmail
+	err = tx.Save(&user).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+
+func (u *UserDatalayer) UpdateUserEmailByIDWithCAS(id uint, newEmail string) error {
+	var user models.User
+
+	// 开启事务
+	err := u.DB.First(&user, id).Error
+	if err != nil {
+		return err
+	}
+
+	// 更新用户
+	result := u.DB.Model(&user).Where("version = ?", user.Version).Updates(map[string]interface{}{
+		"email":   newEmail,
+		"version": user.Version + 1,
+	})
+
+	if result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected == 0 {
+		return fmt.Errorf("no rows updated")
+	}
 	return nil
 }

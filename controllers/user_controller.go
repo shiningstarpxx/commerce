@@ -19,6 +19,11 @@ type HttpRequestCreateUser struct {
 	Email    string `json:"email"`
 }
 
+type HttpResponseUpdateUser struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
+}
+
 func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -55,4 +60,54 @@ func (u *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
+}
+
+func (u *UserController) UpdateUserEmailByIDWithTransaction(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(`{"error": "Method not allowed"}`))
+		return
+	}
+
+	var requestData HttpResponseUpdateUser
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "Invalid request data"}`))
+		return
+	}
+
+	err = u.Datalayer.UpdateUserEmailByIDWithTransaction(requestData.ID, requestData.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "Failed to create user"}`))
+		return
+	}
+}
+
+func (u *UserController) UpdateUserEmailByIDWithCAS(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(`{"error": "Method not allowed"}`))
+		return
+	}
+
+	var requestData HttpResponseUpdateUser
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "Invalid request data"}`))
+		return
+	}
+
+	err = u.Datalayer.UpdateUserEmailByIDWithTransaction(requestData.ID, requestData.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "Failed to create user"}`))
+		return
+	}
 }

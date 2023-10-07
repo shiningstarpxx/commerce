@@ -11,4 +11,5 @@ type User struct {
 	Email     string    `gorm:"unique;not null"`
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`
+	Version   int       `gorm:"default:0"`
 }
